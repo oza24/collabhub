@@ -1,0 +1,40 @@
+# =========================
+# Flutter
+# =========================
+
+collabhub_frontend/.dart_tool/
+collabhub_frontend/.packages
+collabhub_frontend/.flutter-plugins
+collabhub_frontend/.flutter-plugins-dependencies
+collabhub_frontend/.pub/
+collabhub_frontend/build/
+
+# Android
+collabhub_frontend/android/.gradle/
+collabhub_frontend/android/app/debug/
+collabhub_frontend/android/app/profile/
+collabhub_frontend/android/app/release/
+
+# iOS
+collabhub_frontend/ios/Pods/
+collabhub_frontend/ios/.symlinks/
+
+# =========================
+# Node.js
+# =========================
+
+collabhub_backend/node_modules/
+
+# Environment Files
+collabhub_backend/.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# VS Code
+.vscode/
+
+# OS Files
+.DS_Store
+Thumbs.db
