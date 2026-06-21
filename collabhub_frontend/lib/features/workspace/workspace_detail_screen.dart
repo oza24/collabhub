@@ -1,4 +1,5 @@
 import 'package:collabhub/features/workspace/services/workspace_service.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
@@ -71,20 +72,50 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
     }
   }
 
+  Future<void> refreshWorkspaceMembers() async {
+    try {
+      final response = await WorkspaceService.getWorkspaces();
+
+      final updatedWorkspace = response.data["workspaces"].firstWhere(
+        (w) => w["_id"] == widget.workspace["_id"],
+      );
+
+      setState(() {
+        members = updatedWorkspace["members"] ?? [];
+      });
+    } catch (e) {
+      print("Refresh Members Error: $e");
+    }
+  }
+
   Future<void> addMembers() async {
     try {
-      await WorkspaceService.addMember(
+      final response = await WorkspaceService.addMember(
         workspaceId: widget.workspace["_id"],
-        email: emailController.text,
+        email: emailController.text.trim(),
       );
 
       Navigator.pop(context);
+
       emailController.clear();
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Member Added")));
+      await refreshWorkspaceMembers();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response.data["message"]),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
+      if (e is DioException) {
+        final message = e.response?.data["message"] ?? "Something went wrong";
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
+        );
+      }
+
       print("Add Member Error: $e");
     }
   }
@@ -132,7 +163,7 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
                     content: TextField(
                       controller: emailController,
                       decoration: const InputDecoration(
-                        hintText: "Enter Email",
+                        hintText: "Enter registered email or invite new user",
                         hintStyle: TextStyle(color: Colors.white54),
                       ),
                     ),
@@ -159,11 +190,7 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
 
             icon: const Icon(Icons.person_add),
           ),
-          IconButton(
-            onPressed: () {},
 
-            icon: const Icon(Icons.notifications_none),
-          ),
         ],
       ),
 
@@ -323,11 +350,10 @@ class _WorkspaceDetailScreenState extends State<WorkspaceDetailScreen> {
                       return MemberTile(
                         name: member["username"]!,
                         role: member["email"]!,
-                        onTap: (){
+                        onTap: () {
                           context.push('/dm', extra: member);
                           print("Tapped on member: ${member["username"]}");
                         },
-
                       );
                     },
                   ),

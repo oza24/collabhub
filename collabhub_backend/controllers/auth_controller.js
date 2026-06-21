@@ -2,7 +2,8 @@ const User = require("../models/user_model");
 const PasswordReset = require("../models/password_reset_model");
 const transporter = require("../config/mail");
 const bcrypt = require("bcrypt");
-
+const WorkspaceInvitation = require("../models/workspace_invitation_model");
+const Workspace = require("../models/workspace_model");
 const jwt = require("jsonwebtoken");
 
 exports.signup = async (req, res) => {
@@ -38,6 +39,36 @@ exports.signup = async (req, res) => {
         });
 
         await user.save();
+        const invitations = await WorkspaceInvitation.find({
+            email,
+            status: "pending",
+        });
+
+        for(const invite of invitations){
+
+            await Workspace.findByIdAndUpdate(
+                invite.workspace,
+                {
+                    $push:{
+                        members:user._id,
+                    },
+                }
+            );
+
+            await User.findByIdAndUpdate(
+                user._id,
+                {
+                    $push:{
+                        workspaces:
+                        invite.workspace,
+                    },
+                }
+            );
+
+            invite.status = "accepted";
+
+            await invite.save();
+        }
 
         res.status(201).json({
             message: "Signup successful",
@@ -54,6 +85,8 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
 
     try {
+        console.log("Login Hit");
+        console.log(req.body);
 
         const {
             email,

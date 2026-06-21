@@ -222,38 +222,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
 
                 const SizedBox(height: 24),
-
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-
-            children: [
-              const Text(
-                "Recent Activity",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 16),
-
-              ActivityCard(
-                title: "Rahul created #backend",
-                time: "2 min ago",
-                icon: Icons.add_circle,
-              ),
-
-              ActivityCard(
-                title: "Aman joined Flutter Team",
-                time: "15 min ago",
-                icon: Icons.group_add,
-              ),
-
-              ActivityCard(
-                title: "Priya sent a message",
-                time: "30 min ago",
-                icon: Icons.message,
-              ),
-            ],
-          ),
-
               ],
 
           ),

@@ -18,8 +18,9 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   String currentUserId = "";
 
-
   List chats = [];
+  List filteredChats = [];
+  bool isSearching = false;
   bool isLoading = true;
 
   Future<void> loadCurrentUser() async {
@@ -30,21 +31,18 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-
-
   Future<void> getChats() async {
-    try{
+    try {
       final response = await ChatService.getMyChats();
       print(response.data);
 
       setState(() {
-        chats=response.data["chats"];
+        chats = response.data["chats"];
         print("Chats Count: ${chats.length}");
+        filteredChats = chats;
         isLoading = false;
       });
-
-    }
-    catch(e){
+    } catch (e) {
       print("Chat Error: $e");
       setState(() {
         isLoading = false;
@@ -52,57 +50,90 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  void searchChats(String query) {
+    setState(() {
+      filteredChats = chats.where((chat) {
+        final members = chat["members"] ?? [];
+
+        final otherUser = members.firstWhere(
+          (user) => user["_id"] != currentUserId,
+          orElse: () => {},
+        );
+
+        final username = otherUser["username"] ?? "";
+
+        return username.toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     loadCurrentUser().then((_) => getChats());
-
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Chats"),
+        title: isSearching
+            ? TextField(
+              autofocus: true,
+              onChanged: searchChats,
+              decoration: const InputDecoration(
+                hintText: "Search chats...",
+                border: InputBorder.none,
+              ),
+            )
+            :const Text("Chats"),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
+          IconButton(
+              onPressed: () {
+                setState(() {
+                  isSearching = !isSearching;
+
+                  if(!isSearching){
+                    filteredChats = chats;
+                  }
+                });
+              },
+              icon: const Icon(Icons.search)
+          ),
         ],
       ),
 
-      body: isLoading?
-        const Center(child: LoadingWidget())
-        :
-      ListView.builder(
-          itemCount: chats.length,
-          itemBuilder: (context, index) {
-            final chat = chats[index];
-            final members = chat["members"] ?? [];
+      body: isLoading
+          ? const Center(child: LoadingWidget())
+          : ListView.builder(
+              itemCount: filteredChats.length,
+              itemBuilder: (context, index) {
+                final chat = filteredChats[index];
+                final members = chat["members"] ?? [];
 
-            final otheruser = members.firstWhere(
+                final otheruser = members.firstWhere(
                   (user) => user["_id"] != currentUserId,
-              orElse: () => {},
-            );
+                  orElse: () => {},
+                );
 
-            if (otheruser.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            final lastTime= DateTime.parse(chat["lastMessageTime"]);
-            return ChatTile(
-              name: otheruser["username"],
-              message: chat["lastMessage"]?? "",
-              time: "${lastTime.hour}:${lastTime.minute.toString().padLeft(2, '0')}",
-              onTap: () {
-                context.push(
-                  "/dm",
-                  extra: Map<String, dynamic>.from(otheruser),
+                if (otheruser.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                final lastTime = DateTime.parse(chat["lastMessageTime"]);
+                return ChatTile(
+                  name: otheruser["username"],
+                  message: chat["lastMessage"] ?? "",
+                  time:
+                      "${lastTime.hour}:${lastTime.minute.toString().padLeft(2, '0')}",
+                  onTap: () {
+                    context.push(
+                      "/dm",
+                      extra: Map<String, dynamic>.from(otheruser),
+                    );
+                  },
                 );
               },
-            );
-
-          }
-        )
+            ),
     );
-
   }
 }
