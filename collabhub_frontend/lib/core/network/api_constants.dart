@@ -1,3 +1,3 @@
 class ApiConstants {
-  static const String baseUrl = "http://192.168.1.7:3000/api/";
+  static const String baseUrl = "https://collabhub-dsb7.onrender.com/api/";
 }

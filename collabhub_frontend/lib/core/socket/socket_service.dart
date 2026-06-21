@@ -6,7 +6,7 @@ class SocketService{
     static void connect() {
 
       socket = IO.io(
-        'http://192.168.1.7:3000',
+        'https://collabhub-dsb7.onrender.com',
         IO.OptionBuilder()
             .setTransports(['websocket'])
             .disableAutoConnect()
